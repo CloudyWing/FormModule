@@ -1,0 +1,85 @@
+﻿@using Microsoft.AspNetCore.Hosting
+@using Microsoft.Extensions.Options
+@using CloudyWing.FormModule.Infrastructure.Util
+@using CloudyWing.FormModule.UI.Areas.FormModule.Infrastructure.DependencyInjection
+@using CloudyWing.FormModule.UI.Areas.FormModule.Infrastructure.Models
+
+@inject IOptionsSnapshot<ApplicationOptions> AppOptions
+@inject IUserContext UserContext
+
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.HeadTitle - @AppOptions.Value.ApplicationName</title>
+    <environment include="Development">
+        <link rel="stylesheet" href="~/FormModule/lib/bootstrap/css/bootstrap.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/FormModule/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
+    </environment>
+    <link rel="stylesheet" href="~/FormModule/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" href="~/">@AppOptions.Value.ApplicationName</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                表單設計
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                @if (UserContext.HasPermission(Url.Page("/Manages/Forms/Index", null, new { Area = "FormModule" }))) {
+                                    <li><a class="dropdown-item" asp-page="/Manages/Forms/Index" asp-area="FormModule">表單設定</a></li>
+                                }
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                表單填寫管理
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                @if (UserContext.HasPermission(Url.Page("/Manages/FormPages/Index", null, new { Area = "FormModule" }))) {
+                                    <li><a class="dropdown-item" asp-page="/Manages/FormPages/Index" asp-area="FormModule">表單填寫紀錄</a></li>
+                                }
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main role="main" class="pb-1">
+        <div class="container">
+            <partial name="_Notification" model="Model.StatusNotification" />
+            @RenderBody()
+        </div>
+    </main>
+    <footer class="footer border-top pl-3 text-muted">
+        <div class="container">
+            &copy; @DateTimeOffsetUtils.GetTaipeiNow().Year - @AppOptions.Value.ApplicationName
+        </div>
+    </footer>
+
+    <environment include="Development">
+        <script src="~/FormModule/lib/bootstrap/js/bootstrap.bundle.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/FormModule/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    </environment>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/FormModule/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

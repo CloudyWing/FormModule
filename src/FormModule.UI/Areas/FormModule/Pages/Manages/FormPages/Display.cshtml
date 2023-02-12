@@ -1,0 +1,96 @@
+﻿@page
+
+@using CloudyWing.FormModule.EntityFrameworkCore
+@using CloudyWing.FormModule.UI.Areas.FormModule.Pages.Manages.FormPages
+@using CloudyWing.FormModule.UI.Areas.FormModule.Pages.Manages.FormPages.Models
+
+@model DisplayModel
+@{
+    Layout = "_FormLayout";
+    Model.HeadTitle = "表單填寫紀錄";
+}
+
+<form id="form" method="post">
+    <div class="accordion" id="formSectionsAccordion">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h2>@Model.Settings.Name</h2>
+                <div class="form-group">
+                    @Html.Raw(Model.Settings.Header)
+                </div>
+            </div>
+            <div class="card-body">
+                @foreach (var formSection in Model.Settings.Sections) {
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="sectionHeader@(formSection.Id)">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#section@(formSection.Id)" aria-expanded="true" aria-controls="section@(formSection.Id)">
+                                @formSection.Name
+                            </button>
+                        </h3>
+                        <div id="section@(formSection.Id)" class="accordion-collapse collapse show" aria-labelledby="sectionHeader@(formSection.Id)">
+                            <div class="accordion-body">
+                                @foreach (var formQuestion in formSection.Questions) {
+                                    var questionResponse = Model.ResponseModel.Questions.FirstOrDefault(x => x.FormQuestionId == formQuestion.Id);
+                                    <div id="question-body-@formQuestion.Id">
+                                        <div class="row mb-3">
+                                            <div class="col">
+                                                <label class="form-label">
+                                                    @formQuestion.QuestionText
+                                                    @if (formQuestion.IsRequired) {
+                                                        <span class="text-danger">*</span>
+                                                    }
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col">
+                                                @if (formQuestion.QuestionType == QuestionType.MultiChoice || formQuestion.QuestionType == QuestionType.MultiSelection) {
+                                                    @foreach (DisplayChoiceSettingsModel questionChoice in formQuestion.Choices) {
+                                                        DisplayChoiceResponseModel? optionResponse = questionResponse?.Choices.FirstOrDefault(x => x.QuestionChoiceId == questionChoice.Id);
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="@(formQuestion.QuestionType == 0 ? "radio" : "checkbox")"
+                                                                   id="questionChoice@(questionChoice.Id)" value="true"
+                                                                   checked="@optionResponse?.IsChecked" disabled="disabled">
+                                                            <label class="form-check-label" for="questionChoice@(questionChoice.Id)">
+                                                                @questionChoice.Label
+                                                            </label>
+                                                            @if (questionChoice.HasText) {
+                                                                @Html.Raw(optionResponse?.Response)
+                                                            }
+                                                        </div>
+                                                    }
+                                                } else if (formQuestion.QuestionType == QuestionType.DropDownList) {
+                                                    @foreach (DisplayChoiceSettingsModel questionChoice in formQuestion.Choices) {
+                                                        DisplayChoiceResponseModel? optionResponse = questionResponse?.Choices.SingleOrDefault(x => x.QuestionChoiceId == questionChoice.Id);
+                                                        if (optionResponse is not null) {
+                                                            @questionChoice.Label
+                                                            if (questionChoice.HasText) {
+                                                                <text>
+                                                                    <br />@Html.Raw(optionResponse.Response)
+                                                                </text>
+                                                            }
+                                                        }
+                                                    }
+                                                } else if (formQuestion.QuestionType == QuestionType.ShortAnswer || formQuestion.QuestionType == QuestionType.LongAnswer) {
+                                                    @Html.Raw(questionResponse?.Response)
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr />
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                @Html.Raw(Model.Settings.Footer)
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Buttons {
+    <a asp-page="./Index" class="btn btn-info">返回</a>
+}

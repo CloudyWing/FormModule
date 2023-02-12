@@ -1,0 +1,25 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+<h1>@Model.HeadTitle</h1>
+<hr />
+<div class="card mb-3">
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        @RenderBody()
+    </div>
+    <div class="card-footer">
+        <div class="text-center">
+            @await RenderSectionAsync("Buttons", required: false)
+        </div>
+    </div>
+</div>
+
+@section Head {
+    @await RenderSectionAsync("Head", false)
+}
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", false)
+}

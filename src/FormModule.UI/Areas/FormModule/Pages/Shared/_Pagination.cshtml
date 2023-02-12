@@ -1,0 +1,35 @@
+﻿@model PaginationViewModel
+
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        @if (Model.HasPreviousPage)
+        {
+            <li class="page-item"><button type="submit" class="page-link" asp-page="@Model.Page" form="@Model.FormId" asp-page-handler="@Model.PageHandler" asp-route-pageNumber="@(Model.PageNumber - 1)">上一頁</button></li>
+        }
+        else
+        {
+            <li class="page-item disabled"><span class="page-link">上一頁</span></li>
+        }
+
+        @for (int i = 1; i <= Model.PageCount; i++)
+        {
+            if (i == Model.PageNumber)
+            {
+                <li class="page-item active"><span class="page-link">@i</span></li>
+            }
+            else
+            {
+                <li class="page-item"><button type="submit" class="page-link" form="@Model.FormId" asp-page="@Model.Page" asp-route-pageNumber="@i">@i</button></li>
+            }
+        }
+
+        @if (Model.HasNextPage)
+        {
+            <li class="page-item"><button type="submit" class="page-link" form="@Model.FormId" asp-page="@Model.Page" asp-route-pageNumber="@(Model.PageNumber + 1)">下一頁</button></li>
+        }
+        else
+        {
+            <li class="page-item disabled"><span class="page-link">下一頁</span></li>
+        }
+    </ul>
+</nav>

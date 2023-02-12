@@ -1,0 +1,61 @@
+﻿@page
+@model CloudyWing.FormModule.UI.Areas.FormModule.Pages.Manages.Forms.IndexModel
+@{
+    Layout = "_QueryLayout";
+    Model.HeadTitle = "表單設定";
+}
+
+@if (Model.Records.Any()) {
+    <form id="form" method="post"></form>
+    PaginationViewModel pagination = new PaginationViewModel(Model.Records, "form", "./Index");
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+            <tr>
+                <th scope="col">
+                    @Html.DisplayNameFor(m => Model.Records[0].Name)
+                </th>
+                <th scope="col">
+                    @Html.DisplayNameFor(m => Model.Records[0].Code)
+                </th>
+                <th scope="col">
+                    @Html.DisplayNameFor(m => Model.Records[0].StartTime)
+                </th>
+                <th scope="col">
+                    @Html.DisplayNameFor(m => Model.Records[0].EndTime)
+                </th>
+                <th scope="col">
+                    操作
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Records) {
+                <tr scope="row">
+                    <td>
+                       @item.Name
+                    </td>
+                    <td>
+                        @item.Code
+                    </td>
+                    <td>
+                        @item.StartTime.ToDateTimeString()
+                    </td>
+                    <td>
+                        @item.EndTime.ToDateTimeString()
+                    </td>
+                    <td>
+                        <a class="btn btn-secondary" asp-page="./Edit" asp-route-id="@item.Id">編輯</a>
+                        <button type="submit" class="btn btn-danger btn-delete" form="form" asp-page-handler="delete" asp-route-id="@item.Id">刪除</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <partial name="_Pagination" model="pagination" />
+} else {
+    <partial name="_NoData" />
+}
+
+@section Buttons {
+    <a class="btn btn-primary" asp-page="./Edit">新增</a>
+}

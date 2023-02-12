@@ -1,0 +1,53 @@
+﻿@page
+@model CloudyWing.FormModule.UI.Areas.FormModule.Pages.Manages.SkipFormQuestions.EditModel
+@{
+
+    Layout = "_FormLayout";
+    Model.HeadTitle = "表單跳題設定";
+}
+
+<form id="form" asp-action="Edit">
+    <input type="hidden" asp-for="FormId" />
+    <input type="hidden" asp-for="Input.Id" />
+    <div class="row mb-3">
+        <div class="col-12 col-md-6">
+            <div class="row mb-3">
+                <label class="col-3 col-md-4 col-form-label" asp-for="View.FormCode"></label>
+                <span class="col-9 col-md-8 col-form-label">@Model.View.FormCode</span>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="row mb-3">
+                <label class="col-3 col-md-4 col-form-label" asp-for="View.FormName"></label>
+                <span class="col-9 col-md-8 col-form-label">@Model.View.FormName</span>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label class="col-3 col-md-2 col-form-label required" asp-for="Input.FormQuestionId"></label>
+        <div class="col-9 col-md-10">
+            <select class="form-select" asp-for="Input.FormQuestionId" asp-ajax-url="@Url.Page("Edit", "GetQuestions")" asp-extra-params-formId="@Model.FormId"></select>
+            <span asp-validation-for="Input.FormQuestionId" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label class="col-3 col-md-2 col-form-label" asp-for="Input.QuestionChoiceId"></label>
+        <div class="col-9 col-md-10">
+            <select class="form-select" asp-for="Input.QuestionChoiceId" asp-ajax-url="@Url.Page("Edit", "GetChoices")" asp-non-used-label="請選擇問題" asp-option-label="請選擇選項" asp-extra-params-formId="@Model.FormId"></select>
+            <span asp-validation-for="Input.QuestionChoiceId" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label class="col-3 col-md-2 col-form-label required" asp-for="Input.SkipQuestionId"></label>
+        <div class="col-9 col-md-10">
+            <select class="form-select" asp-for="Input.SkipQuestionId" asp-ajax-url="@Url.Page("Edit", "GetPassQuestions")" asp-extra-params-formId="@Model.FormId"></select>
+            <span asp-validation-for="Input.SkipQuestionId" class="text-danger"></span>
+        </div>
+    </div>
+</form>
+
+@section Buttons {
+    <button type="submit" class="btn btn-primary" form="form">儲存</button>
+
+    <a class="btn btn-info" asp-page="./Index" asp-route-formId="@Model.FormId">返回</a>
+}

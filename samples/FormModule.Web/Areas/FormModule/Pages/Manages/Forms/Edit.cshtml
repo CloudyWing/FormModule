@@ -1,0 +1,117 @@
+﻿@page
+@model CloudyWing.FormModule.Web.Areas.FormModule.Pages.Manages.Forms.EditModel
+@{
+    Layout = "_FormLayout";
+    Model.HeadTitle = "表單設定";
+}
+
+<form id="form" asp-action="Edit">
+    <input asp-for="Input.Id" type="hidden" />
+    <div class="row mb-3">
+        <label asp-for="Input.Name" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <input asp-for="Input.Name" class="form-control" />
+            <span asp-validation-for="Input.Name" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.Code" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <input asp-for="Input.Code" class="form-control" />
+            <span asp-validation-for="Input.Code" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.StartTime" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <input asp-for="Input.StartTime" type="datetime-local" class="form-control" />
+            <span asp-validation-for="Input.StartTime" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.EndTime" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <input asp-for="Input.EndTime" type="datetime-local" class="form-control" />
+            <span asp-validation-for="Input.EndTime" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.IsInternal" class="col-3 col-md-2 col-form-label"></label>
+        <div class="col-9 col-md-10">
+            <input asp-for="Input.IsInternal" type="checkbox" class="form-check" />
+            <span asp-validation-for="Input.IsInternal" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3 d-none role-row">
+        <label asp-for="Input.Role" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <input asp-for="Input.Role" type="text" class="form-control" />
+            <span asp-validation-for="Input.Role" class="text-danger"></span>
+            <p class="text-muted">若允許多個角色填寫，請使用分號 (;) 分隔</p>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.Header" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <textarea asp-for="Input.Header" class="form-control"></textarea>
+            <span asp-validation-for="Input.Header" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.Footer" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <textarea asp-for="Input.Footer" multiple="multiple" class="form-control"></textarea>
+            <span asp-validation-for="Input.Footer" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.CanUpdate" class="col-3 col-md-2 col-form-label"></label>
+        <div class="col-9 col-md-10">
+            <input asp-for="Input.CanUpdate" type="checkbox" class="form-check" />
+            <span asp-validation-for="Input.CanUpdate" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.CompletionMessage" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <textarea asp-for="Input.CompletionMessage" multiple="multiple" class="form-control"></textarea>
+            <span asp-validation-for="Input.CompletionMessage" class="text-danger"></span>
+            <p class="text-muted">若欲顯示編輯網站的網址，請使用 {{url}} 取代</p>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label asp-for="Input.DemoColumn" class="col-3 col-md-2 col-form-label required"></label>
+        <div class="col-9 col-md-10">
+            <textarea asp-for="Input.DemoColumn" class="form-control"></textarea>
+            <span asp-validation-for="Input.DemoColumn" class="text-danger"></span>
+        </div>
+    </div>
+</form>
+
+@section Buttons {
+    <button type="submit" class="btn btn-primary" form="form">儲存</button>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Input.Id)) {
+        <a class="btn btn-secondary" asp-page="./EditDetails" asp-route-id="@Model.Input.Id">編輯內容</a>
+        <a class="btn btn-secondary" asp-page="../SkipFormQuestions/Index" asp-route-formId="@Model.Input.Id">設定跳題</a>
+    }
+
+    <a class="btn btn-info" asp-page="./Index">返回</a>
+}
+
+@section Scripts {
+    <script>
+        const isInternal = document.querySelector('#@Html.IdFor(m => m.Input.IsInternal)');
+        const roleRow = document.querySelector('.role-row');
+
+        isInternal.addEventListener('change', function () {
+            if (isInternal.checked) {
+                roleRow.classList.remove('d-none');
+            } else {
+                roleRow.classList.add('d-none');
+            }
+        });
+
+        isInternal.dispatchEvent(new Event('change'));
+    </script>
+}

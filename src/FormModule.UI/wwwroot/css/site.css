@@ -1,0 +1,7 @@
+﻿.required:before {
+    content: "*";
+    color: red;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-right: 5px;
+}

@@ -1,0 +1,8 @@
+﻿@model NotificationViewModel
+
+@if (Model is not null && Model.Level != NotificationLevel.None) {
+    <div class="alert alert-@Model.Level.ToString().ToLower() alert-dismissible" role="alert">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        @Model.Message
+    </div>
+}

@@ -1,0 +1,390 @@
+﻿@page
+@using System.Text.Json
+@using CloudyWing.FormModule.UI.Areas.FormModule.Pages.Manages.Forms
+@using CloudyWing.FormModule.EntityFrameworkCore
+
+@model EditDetailsModel
+@{
+    Layout = "_FormLayout";
+    Model.HeadTitle = "表單內容編輯";
+}
+<form id="form" method="post">
+    <input type="hidden" asp-for="Input.Id" />
+    <h2>@Model.View.Name</h2>
+    <div class="form-group">
+        @Html.Raw(Model.View.Header)
+    </div>
+    <div id="sections"></div>
+    <div class="form-group">
+        <button type="button" class="btn btn-success" id="add-section-button">新增區段</button>
+        <span asp-validation-for="Input.Sections" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        @Html.Raw(Model.View.Footer)
+    </div>
+
+    <template id="section-template">
+        <div class="card mb-3 section-card">
+            <div class="card-header bg-primary bg-opacity-25">
+                <button type="button" class="btn btn-warning btn-sm remove-section-button">移除區段</button>
+                <input type="hidden" class="form-control" name="Input.Sections.Index" value="" />
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="required">區段名稱</label>
+                    <input type="text" class="form-control" name="Input.Sections[Index].Name" value="" />
+                    <span asp-validation-for="Input.Sections[0].Name" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="card-footer bg-primary bg-opacity-25">
+                <div class="questions"></div>
+                <button type="button" class="btn btn-success btn-sm add-question-button">新增問題</button>
+                <span asp-validation-for="Input.Sections[0].Questions" class="text-danger"></span>
+            </div>
+        </div>
+    </template>
+
+    <template id="question-template">
+        <div class="card mb-3 question-card">
+            <div class="card-header bg-secondary bg-opacity-25">
+                <button type="button" class="btn btn-warning btn-sm remove-question-button">移除問題</button>
+                <input type="hidden" class="form-control" name="Input.Sections[Index].Questions.Index" value="" />
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="required">問題內容</label>
+                    <textarea class="form-control" name="Input.Sections[Index].Questions[Index].QuestionText"></textarea>
+                    <span asp-validation-for="Input.Sections[0].Questions[0].QuestionText" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label class="required">問題類型</label>
+                    <select class="form-select" name="Input.Sections[Index].Questions[Index].QuestionType">
+                        @foreach(QuestionType type in QuestionType.GetAll()) {
+                            <option value="@type.Value">@type.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.Sections[0].Questions[0].QuestionType" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <label class="form-check-label">
+                            <input type="checkbox" class="form-check-input" name="Input.Sections[Index].Questions[Index].IsRequired" value="true" />
+                            必填
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+            <div class="card-footer bg-secondary bg-opacity-25 d-none">
+                <div class="choices"></div>
+                <button type="button" class="btn btn-success btn-sm add-choice-button">新增選項</button>
+                <span asp-validation-for="Input.Sections[0].Questions[0].Choices" class="text-danger"></span>
+            </div>
+        </div>
+    </template>
+
+    <template id="choice-template">
+        <div class="card mb-3 choice-card">
+            <div class="card-header bg-info bg-opacity-25">
+                <button type="button" class="btn btn-warning btn-sm remove-choice-button">移除選項</button>
+                <input type="hidden" class="form-control" name="Input.Sections[Index].Questions[Index].Choices.Index" value="" />
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="required">選項內容</label>
+                    <input type="text" class="form-control" name="Input.Sections[Index].Questions[Index].Choices[Index].Label" value="" />
+                    <span asp-validation-for="Input.Sections[0].Questions[0].Choices[0].Label" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <label class="form-check-label">
+                            <input type="checkbox" class="form-check-input" name="Input.Sections[Index].Questions[Index].Choices[Index].HasText" value="true" />
+                            允許填寫其他文字
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</form>
+
+@section Buttons {
+    <button type="submit" form="form" class="btn btn-primary">儲存</button>
+    @if (Model.Input.Sections.Any()) {   
+        <button type="submit" form="form" class="btn btn-danger btn-delete" asp-page-handler="delete" asp-route-id="@Model.Input.Id">刪除</button>
+    }
+    <a class="btn btn-info" asp-page="./Edit" asp-route-id="@Model.Input.Id">返回</a>
+}
+
+@section Scripts {
+    <script>
+        const data = @Html.Raw(JsonSerializer.Serialize(Model.Input.Sections, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        data.forEach((section, sectionIndex) => {
+            addSection(section, sectionIndex, true);
+            sectionElement = document.querySelectorAll('#sections .section-card')[sectionIndex];
+
+            section.questions.forEach((question, questionIndex) => {
+                addQuestion(sectionElement, question, questionIndex, true);
+                questionElement = sectionElement.querySelectorAll('.question-card')[questionIndex];
+
+                question.choices.forEach((choice, choiceIndex) => {
+                    addChoice(sectionElement, questionElement, choice, choiceIndex);
+                });
+            });
+        });
+
+        const addSectionButton = document.getElementById('add-section-button');
+        addSectionButton.addEventListener('click', () => {
+            const sectionIndex = document.querySelectorAll('#sections .section-card').length;
+            const section = {
+                name: '',
+                questions: [],
+            };
+            addSection(section, sectionIndex, false);
+        });
+
+        function addSection(section, sectionIndex, isLoading) {
+            const sectionTemplate = document.getElementById('section-template');
+            const sectionContent = sectionTemplate.content.cloneNode(true);
+            const sectionElement = document.createElement('div');
+            sectionElement.appendChild(sectionContent);
+
+            const sectionHeader = sectionElement.querySelector('.card-header');
+            const sectionNameInput = sectionElement.querySelector('input[name$=".Name"]');
+            sectionHeader.querySelector('input[name$=".Index"]').value = sectionIndex;
+            sectionNameInput.name = `Input.Sections[${sectionIndex}].Name`;
+            sectionNameInput.value = section.name;
+
+            const sectionNameSpan = sectionElement.querySelector('span[data-valmsg-for$=".Name"]');
+            sectionNameSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Name`);
+            sectionNameSpan.innerHTML = '';
+
+            const sectionQuestionsSpan = sectionElement.querySelector('span[data-valmsg-for$=".Questions"]');
+            sectionQuestionsSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions`);
+            sectionQuestionsSpan.innerHTML = '';
+
+            const sections = document.getElementById('sections');
+            sections.appendChild(sectionElement);
+
+            const addQuestionButton = sectionElement.querySelector('.add-question-button');
+            addQuestionButton.addEventListener('click', () => {
+                const questionIndex = sectionElement.querySelectorAll('.questions .question-card').length;
+                const question = {
+                    questionText: '',
+                    questionType: {
+                        value: 0
+                    },
+                    isRequired: false,
+                    questionChoices: [],
+                };
+                addQuestion(sectionElement, question, questionIndex, false);
+            });
+
+            const removeSectionButton = sectionElement.querySelector('.remove-section-button');
+            removeSectionButton.addEventListener('click', () => {
+                sectionElement.remove();
+                refreshSectionIndexes();
+            });
+
+            if (!isLoading) {
+                addQuestionButton.dispatchEvent(new Event('click'));
+            }
+        }
+
+        function addQuestion(sectionElement, question, questionIndex, isLoading) {
+            const sectionIndex = sectionElement.querySelector('.card-header input[name$=".Index"]').value;
+
+            const questionTemplate = document.getElementById('question-template');
+            const questionContent = questionTemplate.content.cloneNode(true);
+            const questionElement = document.createElement('div');
+            questionElement.appendChild(questionContent);
+
+            const questionHeader = questionElement.querySelector('.card-header');
+            questionHeader.querySelector('input[name$=".Index"]').value = questionIndex;
+
+            const questionTextInput = questionElement.querySelector('textarea[name$=".QuestionText"]');
+            questionTextInput.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionText`;
+            questionTextInput.value = question.questionText;
+
+            const questionTextSpan = questionElement.querySelector('span[data-valmsg-for$=".QuestionText"]');
+            questionTextSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionText`);
+            questionTextSpan.innerHTML = '';
+
+            const questionTypeSelect = questionElement.querySelector('select[name$=".QuestionType"]');
+            questionTypeSelect.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionType`;
+            if (question.questionType) {
+                questionTypeSelect.value =  question.questionType.value;
+            } else {
+                questionTypeSelect.value = -1;
+            }
+
+            const questionTypeSpan = questionElement.querySelector('span[data-valmsg-for$=".QuestionType"]');
+            questionTypeSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionType`);
+            questionTypeSpan.innerHTML = '';
+
+            const isRequiredCheckbox = questionElement.querySelector('input[name$=".IsRequired"]');
+            isRequiredCheckbox.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].IsRequired`;
+            isRequiredCheckbox.checked = question.isRequired;
+
+            const questionChoicesSpan = questionElement.querySelector('span[data-valmsg-for$=".Choices"]');
+            questionChoicesSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices`);
+            questionChoicesSpan.innerHTML = '';
+
+            const questions = sectionElement.querySelector('.questions');
+            questions.appendChild(questionElement);
+
+            const addChoiceButton = questionElement.querySelector('.add-choice-button');
+            addChoiceButton.addEventListener('click', () => {
+                const choiceIndex = questionElement.querySelectorAll('.choices .choice-card').length;
+                const choice = {
+                    label: '',
+                    haxText: false
+                };
+                addChoice(sectionElement, questionElement, choice, choiceIndex);
+            });
+
+            const removeQuestionButton = questionElement.querySelector('.remove-question-button');
+            removeQuestionButton.addEventListener('click', () => {
+                questionElement.remove();
+
+                const sectionIndex = sectionElement.querySelector('.card-header input[name$=".Index"]').value;
+                refreshQuestionIndexes(sectionElement, sectionIndex);
+            });
+
+            questionTypeSelect.addEventListener('change', (event) => {
+                const isChoiceButton = event.target.value === '@QuestionType.MultiChoice.Value'
+                    || event.target.value === '@QuestionType.MultiSelection.Value'
+                    || event.target.value === '@QuestionType.DropDownList.Value';
+
+                const disableInputs = (cardFooter, isDisabled) => {
+                    const inputs = cardFooter.querySelectorAll('input');
+                    inputs.forEach((input) => {
+                        input.disabled = isDisabled;
+                    });
+                };
+
+                const cardFooter = questionElement.querySelector('.card-footer');
+                if (isChoiceButton) {
+                    cardFooter.classList.remove("d-none")
+                    disableInputs(cardFooter, false);
+                } else {
+                    cardFooter.classList.add("d-none");
+                    disableInputs(cardFooter, true);
+                }
+            });
+
+            questionTypeSelect.dispatchEvent(new Event('change'));
+
+            if (!isLoading) {
+                addChoiceButton.dispatchEvent(new Event('click'));
+            }
+        }
+
+        function addChoice(sectionElement, questionElement, choice, choiceIndex) {
+            const sectionIndex = sectionElement.querySelector('.card-header input[name$=".Index"]').value;
+            const questionIndex = questionElement.querySelector('.card-header  input[name$=".Index"]').value;
+            
+            const choiceTemplate = document.getElementById('choice-template');
+            const choiceContent = choiceTemplate.content.cloneNode(true);
+            const choiceElement = document.createElement('div');
+            choiceElement.appendChild(choiceContent);
+
+            const labelInput = choiceElement.querySelector('input[name$=".Label"]');
+            labelInput.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices[${choiceIndex}].Label`;
+            labelInput.value = choice.label;
+
+            const labelSpan = choiceElement.querySelector('span[data-valmsg-for$=".Label"]');
+            labelSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices[${choiceIndex}].Label`);
+            labelSpan.innerHTML = '';
+
+            const hasTextCheckbox = choiceElement.querySelector('input[name$=".HasText"]');
+            hasTextCheckbox.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices[${choiceIndex}].HasText`;
+            hasTextCheckbox.checked = choice.hasText;
+
+            const removeChoiceButton = choiceElement.querySelector('.remove-choice-button');
+            removeChoiceButton.addEventListener('click', () => {
+                choiceElement.remove();
+
+                const sectionIndex = sectionElement.querySelector('.card-header input[name$=".Index"]').value;
+                const questionIndex = questionElement.querySelector('.card-header  input[name$=".Index"]').value;
+
+                refreshChoiceIndexes(questionElement, sectionIndex, questionIndex);
+            });
+
+            const choices = questionElement.querySelector('.choices');
+            choices.appendChild(choiceElement);
+        }
+
+        function refreshSectionIndexes() {
+            const sectionCards = document.querySelectorAll('#sections .section-card');
+
+            sectionCards.forEach((sectionElement, sectionIndex) => {
+                sectionElement.querySelector('input[name$=".Index"]').value = sectionIndex;
+
+                const sectionNameInput = sectionElement.querySelector('input[name$=".Name"]');
+                sectionNameInput.name = `Input.Sections[${sectionIndex}].Name`;
+
+                const sectionNameSpan = sectionElement.querySelector('span[data-valmsg-for$=".Name"]');
+                sectionNameSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Name`);
+
+                const sectionQuestionsSpan = sectionElement.querySelector('span[data-valmsg-for$=".Questions"]');
+                sectionQuestionsSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions`);
+
+                refreshQuestionIndexes(sectionElement, sectionIndex);
+            });
+        }
+
+        function refreshQuestionIndexes(sectionElement, sectionIndex) {
+            const questionCards = sectionElement.querySelectorAll('.questions .question-card');
+            questionCards.forEach((questionElement, questionIndex) => {
+                questionElement.querySelector('input[name$=".Index"]').value = questionIndex;
+
+                const questionTextInput = questionElement.querySelector('textarea[name$=".QuestionText"]');
+                questionTextInput.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionText`;
+
+                const questionTextSpan = questionElement.querySelector('span[data-valmsg-for$=".QuestionText"]');
+                questionTextSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionText`);
+
+                const questionTypeSelect = questionElement.querySelector('select[name$=".QuestionType"]');
+                questionTypeSelect.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionType`;
+
+                const questionTypeSpan = questionElement.querySelector('span[data-valmsg-for$=".QuestionType"]');
+                questionTypeSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].QuestionType`);
+
+                const isRequiredCheckbox = questionElement.querySelector('input[name$=".IsRequired"]');
+                isRequiredCheckbox.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].IsRequired`;
+
+                const questionChoicesSpan = questionElement.querySelector('span[data-valmsg-for$=".Choices"]');
+                questionChoicesSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices`);
+
+                refreshChoiceIndexes(questionElement, sectionIndex, questionIndex);
+            });
+        }
+
+        function refreshChoiceIndexes(questionElement, sectionIndex, questionIndex) {
+            const choiceCards = questionElement.querySelectorAll('.choices .choice-card');
+            choiceCards.forEach((choiceCard, choiceIndex) => {
+                choiceCard.querySelector('input[name$=".Index"]').value = choiceIndex;
+                const labelInput = choiceCard.querySelector('input[name$=".Label"]');
+                labelInput.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices[${choiceIndex}].Label`;
+
+                const haxTextInput = choiceCard.querySelector('input[name$=".HasText"]');
+                haxTextInput.name = `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices[${choiceIndex}].HasText`;
+
+                const questionChoicesSpan = questionElement.querySelector('span[data-valmsg-for$=".Choices"]');
+                questionChoicesSpan.setAttribute('data-valmsg-for', `Input.Sections[${sectionIndex}].Questions[${questionIndex}].Choices`);
+            });
+        }
+
+        @if (ViewContext.ViewData.ModelState.ErrorCount > 0) {
+            foreach (var pair in ViewContext.ViewData.ModelState.Where(x => x.Value!.Errors.Any())) {
+                <text>
+                    {
+                        const valmsg = document.querySelector('span[data-valmsg-for="@pair.Key"]');
+                        valmsg.innerHTML = '@pair.Value!.Errors.First().ErrorMessage';
+                    }
+                </text>
+            }
+        }
+    </script>
+}

@@ -1,0 +1,40 @@
+assembly-versioning-scheme: MajorMinor
+assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{WeightedPreReleaseNumber ?? 0}'
+assembly-informational-format: '{NuGetVersion}'
+mode: ContinuousDelivery
+tag-pre-release-weight: 300
+
+branches:
+  main:
+    regex: ^master$|^main$
+    tag: ''
+    increment: None
+    is-release-branch: false
+    is-mainline: true
+  feature:
+    regex: ^features?[/-]
+    mode: ContinuousDeployment
+    tag: alpha
+    increment: None
+    track-merge-target: true
+    source-branches: [ 'release', 'feature' ]
+    tracks-release-branches: true
+    is-release-branch: false
+    is-mainline: false
+    pre-release-weight: 0
+  release:
+    regex: ^releases?[/-]
+    mode: ContinuousDeployment
+    tag: beta
+    increment: None
+    is-release-branch: true
+    is-mainline: false
+    pre-release-weight: 200
+  hotfix:
+    regex: ^hotfix(es)?[/-]
+    mode: ContinuousDeployment
+    tag: beta
+    increment: None
+    is-release-branch: true
+    is-mainline: false
+    pre-release-weight: 200

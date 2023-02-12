@@ -1,0 +1,270 @@
+﻿@page "/{area}/FormSubmissions/{formCode}/{securityCode?}"
+
+@using CloudyWing.FormModule.EntityFrameworkCore
+@using CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions
+@using CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models
+
+@model IndexModel
+@{
+    Layout = "_FormLayout";
+    Model.HeadTitle = "表單填寫";
+    int questionIndex = 0;
+}
+
+<form id="form" method="post">
+    <input type="hidden" asp-for="Input.FormId" />
+    <input type="hidden" asp-for="Input.FormPageId" />
+    <input type="hidden" asp-for="Input.SecurityCode" />
+    <div class="accordion" id="formSectionsAccordion">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h2>@Model.View.Name</h2>
+                <div class="form-group">
+                    @Html.Raw(Model.View.Header)
+                </div>
+            </div>
+            <div class="card-body">
+                @foreach (var formSection in Model.View.Sections) {
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="sectionHeader@(formSection.Id)">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#section@(formSection.Id)" aria-expanded="true" aria-controls="section@(formSection.Id)">
+                                @formSection.Name
+                            </button>
+                        </h3>
+                        <div id="section@(formSection.Id)" class="accordion-collapse collapse show" aria-labelledby="sectionHeader@(formSection.Id)">
+                            <div class="accordion-body">
+                                @foreach (var formQuestion in formSection.Questions) {
+                                    var questionInput = Model.Input.Questions.FirstOrDefault(x => x.FormQuestionId == formQuestion.Id);
+                                    int choiceIndex = 0;
+                                    <div id="question-body-@formQuestion.Id">
+                                        <div class="row mb-3">
+                                            <div class="col">
+                                                <div class="form-group @(formQuestion.IsRequired ? "required" : "")">
+                                                    <label class="form-label">
+                                                        @formQuestion.QuestionText
+                                                    </label>
+                                                    <input type="hidden" name="Input.Questions[@questionIndex].FormQuestionId" value="@formQuestion.Id" />
+                                                    @if (formQuestion.QuestionType == QuestionType.MultiChoice || formQuestion.QuestionType == QuestionType.MultiSelection) {
+                                                        @foreach (IndexChoiceViewModel questionChoice in formQuestion.Choices) {
+                                                            IndexChoiceInputModel? optionInput = questionInput?.Choices.FirstOrDefault(x => x.QuestionChoiceId == questionChoice.Id);
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="@(formQuestion.QuestionType == 0 ? "radio" : "checkbox")"
+                                                                       name="Input.Questions[@questionIndex].Choices[@(choiceIndex)].IsChecked"
+                                                                       id="questionChoice@(questionChoice.Id)" value="true"
+                                                                       checked="@optionInput?.IsChecked">
+                                                                <input type="hidden" id="questionChoiceHidden@(questionChoice.Id)" name="Input.Questions[@questionIndex].Choices[@(choiceIndex)].QuestionChoiceId" value="@questionChoice.Id" />
+
+                                                                <label class="form-check-label" for="questionChoice@(questionChoice.Id)">
+                                                                    @questionChoice.Label
+                                                                </label>
+
+                                                                @if (questionChoice.HasText) {
+                                                                    <input type="text" class="form-control d-none" id="questionChoiceText@(questionChoice.Id)" name="Input.Questions[@questionIndex].Choices[@choiceIndex].Response" value="@optionInput?.Response" placeholder="Enter text">
+                                                                    <span asp-validation-for="Input.Questions[questionIndex].Choices[choiceIndex].Response" class="@(formQuestion.QuestionType == QuestionType.MultiChoice ? "text-danger d-none" : "text-danger")"></span>
+                                                                }
+                                                            </div>
+
+                                                            @if (formQuestion.QuestionType == QuestionType.MultiSelection) {
+                                                                choiceIndex++;
+                                                            }
+                                                        }
+                                                    } else if (formQuestion.QuestionType == QuestionType.DropDownList) {
+                                                        <select class="form-select" id="question@(formQuestion.Id)" name="Input.Questions[@questionIndex].Choices[@(choiceIndex)].QuestionChoiceId">
+                                                            <option>請選擇項目</option>
+                                                            @foreach (IndexChoiceViewModel questionChoice in formQuestion.Choices) {
+                                                                <option value="@questionChoice.Id" class="@(questionChoice.HasText ? "has-text" : "")"
+                                                                        selected="@(questionInput?.Choices.Any(x => x.QuestionChoiceId == questionChoice.Id) == true)">
+                                                                    @questionChoice.Label
+                                                                </option>
+                                                            }
+                                                        </select>
+                                                        <input type="hidden" name="Input.Questions[@questionIndex].Choices[@(choiceIndex)].IsChecked" value="true" />
+
+                                                        @if (formQuestion.Choices.Any(x => x.HasText)) {
+                                                            <input type="text" class="form-control d-none" id="questionSelectText@(formQuestion.Id)" name="Input.Questions[@questionIndex].Choices[@choiceIndex].Response" value="@questionInput?.Choices.First()?.Response" placeholder="Enter text">
+                                                            <span asp-validation-for="Input.Questions[questionIndex].Choices[choiceIndex].Response" class="text-danger"></span>
+                                                        }
+                                                    } else if (formQuestion.QuestionType == QuestionType.ShortAnswer) {
+                                                        <input type="text" class="form-control" id="question@(formQuestion.Id)" name="Input.Questions[@questionIndex].Response" rows="3" value="@questionInput?.Response" />
+                                                        <span asp-validation-for="Input.Questions[questionIndex].Response" class="text-danger"></span>
+                                                    } else if (formQuestion.QuestionType == QuestionType.LongAnswer) {
+                                                        <textarea class="form-control" id="question@(formQuestion.Id)" name="Input.Questions[@questionIndex].Response" rows="3">@questionInput?.Response</textarea>
+                                                        <span asp-validation-for="Input.Questions[questionIndex].Response" class="text-danger"></span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span asp-validation-for="Input.Questions[questionIndex]" class="text-danger"></span>
+                                        <hr />
+                                    </div>
+                                    questionIndex++;
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                @Html.Raw(Model.View.Footer)
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Buttons {
+    <button type="submit" class="btn btn-primary" form="form">儲存</button>
+}
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.form-check-input[id^="questionChoice"]').forEach(function (choiceElement) {
+            choiceElement.addEventListener('change', function () {
+                if (this.type === 'radio') {
+                    document.querySelectorAll('.form-check-input[name="' + this.name + '"]').forEach(function (radioElement) {
+                        const textInputId = radioElement.id.replace('questionChoice', 'questionChoiceText');
+                        const textInput = document.getElementById(textInputId);
+
+                        if (textInput) {
+                            const valMsg = textInput.nextElementSibling;
+
+                            if (radioElement.checked) {
+                                textInput.classList.remove('d-none');
+                                valMsg.classList.remove('d-none');
+                                textInput.disabled = false;
+                            } else {
+                                textInput.classList.add('d-none');
+                                valMsg.classList.add('d-none');
+                                textInput.disabled = true;
+                            }
+                        }
+
+                        const hiddenId = radioElement.id.replace('questionChoice', 'questionChoiceHidden');
+                        document.getElementById(hiddenId).disabled = !radioElement.checked;
+                    });
+                } else {
+                    const textInputId = this.id.replace('questionChoice', 'questionChoiceText');
+                    const textInput = document.getElementById(textInputId);
+
+                    if (textInput) {
+                        if (this.checked) {
+                            textInput.classList.remove('d-none');
+                        } else {
+                            textInput.classList.add('d-none');
+                        }
+                    }
+                }
+            });
+
+            choiceElement.dispatchEvent(new Event('change'));
+        });
+
+        document.querySelectorAll('.form-select[id^="question"]').forEach(function (selectElement) {
+            const _textInputId = selectElement.id.replace('question', 'questionSelectText');
+            const _textInput = document.getElementById(_textInputId);
+
+            selectElement.addEventListener('change', function () {
+                if (selectElement.options[selectElement.selectedIndex].classList.contains("has-text")) {
+                    _textInput.classList.remove("d-none");
+                } else {
+                    _textInput.classList.add("d-none");
+                }
+            });
+
+            selectElement.dispatchEvent(new Event('change'));
+        });
+
+        const skipSettings = []
+        @foreach (var skip in Model.View.SkipSettings)
+        {
+            <text>
+                skipSettings.push({
+                    formQuestionId: '@skip.FormQuestionId',
+                    questionChoiceId: '@skip.QuestionChoiceId',
+                    skipQuestionId: '@skip.SkipQuestionId'
+                });
+            </text>
+        }
+
+        let hiddenQuestionMaps = [];
+        document.querySelectorAll(' input[type="text"], [id^="question-body-"] [type="checkbox"], [id^="question-body-"] [type="radio"], [id^="question-body-"] select, [id^="question-body-"] textarea').forEach(elem => {
+            elem.addEventListener('change', event => {
+                if (event.target.tagName === 'INPUT' && event.target.type === 'text' && event.target.id.indexOf('Choice') > 0) {
+                    return;
+                }
+
+                const questionBodyId = event.target.closest('[id^="question-body-"]').id.slice(14);
+
+                let skipQuestionId = '';
+                if (event.target.type === 'radio') {
+                    let questionChoiceId = event.target.closest('.form-check').querySelector('input[type="hidden"][name$="QuestionChoiceId"]').value;
+
+                    if (event.target.checked) {
+                        hiddenQuestionMaps = hiddenQuestionMaps.filter(map => map.formQuestionId !== questionBodyId);
+
+                        const filtedSkipSettings = skipSettings.filter(setting => setting.formQuestionId === questionBodyId
+                            && (setting.questionChoiceId === questionChoiceId || setting.questionChoiceId === ''));
+
+                        if (filtedSkipSettings.length > 0) {
+                            filtedSkipSettings.forEach(setting => {
+                                hiddenQuestionMaps.push(setting);
+                            });
+                        }
+                    }
+                } else if (event.target.type === 'checkbox') {
+                    hiddenQuestionMaps = hiddenQuestionMaps.filter(map => map.formQuestionId !== questionBodyId);
+
+                    event.target.closest('[id^="question-body-"] ').querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        if (checkbox.checked) {
+                            let questionChoiceId = checkbox.closest('.form-check').querySelector('input[type="hidden"][name$="QuestionChoiceId"]').value;
+                            const skipSetting = skipSettings.find(setting => setting.formQuestionId === questionBodyId && setting.questionChoiceId === questionChoiceId);
+
+                            if (skipSetting) {
+                                hiddenQuestionMaps.push(skipSetting);
+                            }
+                        }
+                    });
+
+                    if (event.target.checked) {
+                        const skipSetting = skipSettings.find(setting => setting.formQuestionId === questionBodyId && setting.questionChoiceId === '');
+
+                        if (skipSetting) {
+                            hiddenQuestionMaps.push(skipSetting);
+                        }
+                    }
+                } else if (event.target.tagName === 'SELECT') {
+                    const filtedSkipSettings = skipSettings.filter(setting => setting.formQuestionId === questionBodyId
+                        && (setting.questionChoiceId === event.target.value || setting.questionChoiceId === ''));
+
+                    if (filtedSkipSettings.length > 0) {
+                        filtedSkipSettings.forEach(setting => {
+                            hiddenQuestionMaps.push(setting);
+                        });
+                    } else {
+                        hiddenQuestionMaps = hiddenQuestionMaps.filter(map => map.formQuestionId !== questionBodyId);
+                    }
+                } else {
+                    const skipSetting = skipSettings.find(setting => setting.formQuestionId === questionBodyId);
+                    if (skipSetting) {
+                        if (event.target.value) {
+                            hiddenQuestionMaps.push(skipSetting);
+                        } else {
+                            hiddenQuestionMaps = hiddenQuestionMaps.filter(map => map.formQuestionId !== questionBodyId);
+                        }
+                    }
+                }
+
+                document.querySelectorAll('[id^="question-body-"]').forEach(questionBody => {
+                    const _questionBodyId = questionBody.id.slice(14);
+                    const map = hiddenQuestionMaps.find(map => map.skipQuestionId === _questionBodyId);
+                    if (map) {
+                        questionBody.classList.add('d-none');
+                    } else {
+                        questionBody.classList.remove('d-none');
+                    }
+                });
+            });
+
+            elem.dispatchEvent(new Event('change'));
+        });
+    </script>
+}

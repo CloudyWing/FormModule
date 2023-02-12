@@ -1,0 +1,36 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+<h1>@Model.HeadTitle</h1>
+<hr />
+<div class="card mb-3">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6">查詢條件</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                @await RenderSectionAsync("QueryFields")
+            </div>
+        </div>
+    </div>
+</div>
+<div class="mb-3">
+    @await RenderSectionAsync("Buttons", false)
+</div>
+<div class="table-responsive mb-3">
+    @RenderBody()
+</div>
+
+
+@section Head {
+    @await RenderSectionAsync("Head", false)
+}
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", false)
+}
