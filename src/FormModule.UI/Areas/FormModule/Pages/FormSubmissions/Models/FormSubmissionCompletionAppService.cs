@@ -29,7 +29,7 @@ namespace CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models
         /// </summary>
         /// <param name="serviceProvider">The service provider.</param>
         /// <param name="formPageQueryService">The form page query service.</param>
-        /// <exception cref="CloudyWing.FormModule.Infrastructure.Util.ExceptionUtils"></exception>
+        /// <exception cref="ExceptionUtils"></exception>
         public FormSubmissionCompletionAppService(
             IServiceProvider? serviceProvider,
             IQueryableService<TFormPageQueryEntity> formPageQueryService
@@ -57,7 +57,9 @@ namespace CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models
                 x => new {
                     x.Form.Code,
                     x.Form.CompletionMessage,
-                    x.Page.SecurityCode
+                    x.Form.IsInternal,
+                    x.Page.SecurityCode,
+                    x.Page.UpdatedAt
                 },
                 x => x.Page.Id.Equals(convertedId)
             );
@@ -65,7 +67,10 @@ namespace CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models
             string url = LinkGenerator.GetUriByPage(HttpContext, "/FormSubmissions/Index", null, new { Area = "FormModule", FormCode = info.Code, info.SecurityCode });
 
             return new TCompletionViewModel {
-                CompletionMessage = info.CompletionMessage.Replace("{{url}}", url)
+                CompletionMessage = info.CompletionMessage.Replace("{{url}}", url),
+                IsInternal = info.IsInternal,
+                SecurityCode = info.SecurityCode,
+                UpdatedAt = info.UpdatedAt
             };
         }
     }

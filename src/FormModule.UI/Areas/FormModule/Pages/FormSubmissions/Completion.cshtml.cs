@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using CloudyWing.FormModule.Infrastructure.Util;
 using CloudyWing.FormModule.UI.Areas.FormModule.Infrastructure.Models;
 using CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions {
     public abstract class CompletionModel<TCompletionViewModel> : PageModelBase
@@ -16,8 +17,15 @@ namespace CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions {
 
         public virtual TCompletionViewModel View { get; set; }
 
-        public virtual async Task OnGetAsync([Required] string id) {
+        public virtual async Task<IActionResult> OnGetAsync([Required] string id) {
             View = await AppService.GetViewAsync(id);
+
+            if ((View.IsInternal && View.SecurityCode != UserContext.UserId)
+                || View.UpdatedAt < DateTimeOffsetUtils.GetTaipeiNow().AddMinutes(-3)) {
+                return NotFound();
+            }
+
+            return Page();
         }
     }
 
