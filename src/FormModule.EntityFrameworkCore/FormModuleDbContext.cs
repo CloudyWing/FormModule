@@ -331,6 +331,10 @@ namespace CloudyWing.FormModule.EntityFrameworkCore {
         /// <param name="isRequired">if set to <c>true</c> [is required].</param>
         /// <param name="isPk">if set to <c>true</c> [is pk].</param>
         protected virtual void SetIdColumn(PropertyBuilder builder, bool isRequired, bool isPk) {
+            if (isRequired) {
+                builder.IsRequired();
+            }
+
             if (isPk) {
                 builder.ValueGeneratedOnAdd();
             }

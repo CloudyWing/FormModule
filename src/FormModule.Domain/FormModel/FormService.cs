@@ -192,8 +192,6 @@ namespace CloudyWing.FormModule.Domain.FormModel {
                     return false;
                 }
 
-                form.ToString();
-
                 form.DetailCreatedBy = editor.ExecutedBy;
                 form.DetailCreatedAt = now;
                 form.DetailUpdatedBy = editor.ExecutedBy;

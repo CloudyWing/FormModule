@@ -29,6 +29,45 @@ public string? CompletionMessage { get; set; }
 #### Property Value
 [System.String](https://docs.microsoft.com/en-us/dotnet/api/System.String 'System.String')
 
+<a name='CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models.CompletionViewModel.IsInternal'></a>
+
+## CompletionViewModel.IsInternal Property
+
+Gets or sets whether this is an internal form.
+
+```csharp
+public bool IsInternal { get; set; }
+```
+
+#### Property Value
+[System.Boolean](https://docs.microsoft.com/en-us/dotnet/api/System.Boolean 'System.Boolean')
+
+<a name='CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models.CompletionViewModel.SecurityCode'></a>
+
+## CompletionViewModel.SecurityCode Property
+
+Gets or sets the security code.
+
+```csharp
+public string SecurityCode { get; set; }
+```
+
+#### Property Value
+[System.String](https://docs.microsoft.com/en-us/dotnet/api/System.String 'System.String')
+
+<a name='CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models.CompletionViewModel.UpdatedAt'></a>
+
+## CompletionViewModel.UpdatedAt Property
+
+Gets or sets the updated at.
+
+```csharp
+public System.DateTimeOffset UpdatedAt { get; set; }
+```
+
+#### Property Value
+[System.DateTimeOffset](https://docs.microsoft.com/en-us/dotnet/api/System.DateTimeOffset 'System.DateTimeOffset')
+
 <a name='CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models.FormSubmissionCompletionAppService_TCompletionViewModel,TDbContext,TFormPageQueryEntity,TForm,TFormPage,TKey_'></a>
 
 ## FormSubmissionCompletionAppService<TCompletionViewModel,TDbContext,TFormPageQueryEntity,TForm,TFormPage,TKey> Class

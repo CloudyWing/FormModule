@@ -323,6 +323,8 @@ namespace CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models
         public virtual async Task<ApplicationResult<string>> UpsertAsync(TIndexInputModel? input, IEnumerable<TIndexSkipViewModel> skipSettings) {
             ExceptionUtils.ThrowIfNull(() => input);
 
+            bool isCreating = string.IsNullOrWhiteSpace(input.SecurityCode);
+
             TFormPageWithDetailsEditor editor = new() {
                 FormId = input.FormId,
                 SecurityCode = string.IsNullOrWhiteSpace(input.SecurityCode)
@@ -363,10 +365,16 @@ namespace CloudyWing.FormModule.UI.Areas.FormModule.Pages.FormSubmissions.Models
             });
 
             bool isOk = await FormPageService.UpsertDetailsAsync(editor);
+            string successMessage = isCreating
+                ? ServiceMessageProvider.CreateSuccessMessageAccessor()
+                : ServiceMessageProvider.UpdateSuccessMessageAccessor();
+            string failureMessage = isCreating
+                ? ServiceMessageProvider.CreateFailureMessageAccessor()
+                : ServiceMessageProvider.UpdateFailureMessageAccessor();
 
             return new ApplicationResult<string> {
                 IsOk = isOk,
-                Message = isOk ? "儲存成功！" : "儲存失敗！",
+                Message = isOk ? successMessage : failureMessage,
                 Data = isOk ? editor.Id : null
             };
         }
